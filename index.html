@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArchVision Studio — Architectural Excellence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Josefin+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #CA8A04;
+      --gold-light: #EAB308;
+      --gold-dim: #78580a;
+      --dark: #0C0A09;
+      --dark-2: #1C1917;
+      --dark-3: #28231f;
+      --stone: #44403C;
+      --stone-light: #78716C;
+      --text: #F5F5F4;
+      --text-muted: #A8A29E;
+      --glass: rgba(255,255,255,0.04);
+      --glass-border: rgba(202,138,4,0.2);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Josefin Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom Cursor ── */
+    #cursor {
+      position: fixed; top: 0; left: 0; z-index: 9999;
+      pointer-events: none;
+    }
+    #cursor-dot {
+      width: 8px; height: 8px;
+      background: var(--gold);
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s;
+    }
+    #cursor-ring {
+      width: 40px; height: 40px;
+      border: 1px solid rgba(202,138,4,0.5);
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s, height 0.3s, border-color 0.3s;
+    }
+    body.cursor-hover #cursor-ring {
+      width: 60px; height: 60px;
+      border-color: var(--gold);
+    }
+
+    /* ── Canvas ── */
+    #canvas-hero {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100vh;
+      z-index: 0;
+      opacity: 0.85;
+    }
+
+    /* ── Scrollable content above canvas ── */
+    .site-wrapper {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: fixed; top: 16px; left: 16px; right: 16px;
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 32px;
+      background: rgba(12,10,9,0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    nav.scrolled { background: rgba(12,10,9,0.9); }
+    .nav-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--gold); }
+    .nav-links {
+      display: flex; gap: 40px; list-style: none;
+    }
+    .nav-links a {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .nav-links a:hover { color: var(--gold); }
+    .nav-cta {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dark);
+      background: var(--gold);
+      border: none;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+    /* ── Hero ── */
+    #hero {
+      height: 100vh;
+      display: flex; flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 80px 80px;
+    }
+    .hero-tag {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .hero-tag::before {
+      content: '';
+      display: block;
+      width: 40px; height: 1px;
+      background: var(--gold);
+    }
+    .hero-h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(3rem, 7vw, 6.5rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      margin-bottom: 32px;
+      max-width: 780px;
+    }
+    .hero-h1 em {
+      font-style: normal;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(202,138,4,0.6);
+    }
+    .hero-sub {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 420px;
+      margin-bottom: 48px;
+      letter-spacing: 0.05em;
+    }
+    .hero-actions {
+      display: flex; gap: 20px; align-items: center;
+    }
+    .btn-primary {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--dark);
+      background: var(--gold);
+      border: none;
+      padding: 16px 40px;
+      cursor: pointer;
+      transition: background 0.25s, transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+    .btn-ghost {
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid var(--stone);
+      padding: 16px 40px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .hero-scroll {
+      position: absolute;
+      bottom: 80px; right: 80px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      writing-mode: vertical-rl;
+    }
+    .hero-scroll::after {
+      content: '';
+      width: 1px; height: 60px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      animation: scrollLine 2s ease-in-out infinite;
+    }
+    @keyframes scrollLine {
+      0%, 100% { opacity: 0.3; transform: scaleY(0.5) translateY(-10px); }
+      50% { opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      background: var(--dark-2);
+      border-top: 1px solid var(--glass-border);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 40px 80px;
+      display: flex; gap: 0;
+    }
+    .stat-item {
+      flex: 1;
+      padding: 0 40px;
+      border-right: 1px solid var(--stone);
+    }
+    .stat-item:first-child { padding-left: 0; }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-family: 'Cinzel', serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ── Section Base ── */
+    section {
+      padding: 120px 80px;
+    }
+    .section-tag {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px;
+    }
+    .section-tag::before {
+      content: ''; width: 30px; height: 1px; background: var(--gold);
+    }
+    .section-h2 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: 0.02em;
+      margin-bottom: 20px;
+    }
+    .section-lead {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+      max-width: 520px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── About ── */
+    #about {
+      background: var(--dark-2);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .about-3d-wrap {
+      position: relative;
+      height: 500px;
+    }
+    #canvas-about {
+      width: 100%; height: 100%;
+      border-radius: 2px;
+    }
+    .about-frame {
+      position: absolute; inset: 0;
+      border: 1px solid var(--glass-border);
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .about-frame::before, .about-frame::after {
+      content: '';
+      position: absolute;
+      width: 20px; height: 20px;
+      border-color: var(--gold);
+      border-style: solid;
+    }
+    .about-frame::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .about-frame::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+    .about-content { }
+    .about-list {
+      margin-top: 40px;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .about-item {
+      display: flex; gap: 20px; align-items: flex-start;
+      padding: 24px;
+      background: var(--glass);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-left: 2px solid var(--gold);
+      transition: background 0.2s;
+      cursor: default;
+    }
+    .about-item:hover { background: rgba(202,138,4,0.05); }
+    .about-item-num {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--gold-dim);
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .about-item-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .about-item-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── Projects ── */
+    #projects { background: var(--dark); }
+    .projects-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 60px;
+    }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+    .project-card {
+      position: relative;
+      aspect-ratio: 3/4;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--dark-3);
+    }
+    .project-card:first-child {
+      grid-row: span 2;
+      aspect-ratio: auto;
+    }
+    .project-canvas {
+      width: 100%; height: 100%;
+      display: block;
+    }
+    .project-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(12,10,9,0.95) 0%, rgba(12,10,9,0.1) 60%, transparent 100%);
+      padding: 30px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: opacity 0.4s, transform 0.4s;
+    }
+    .project-card:hover .project-overlay { opacity: 1; transform: translateY(0); }
+    .project-card:hover { cursor: pointer; }
+    .project-cat {
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .project-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .project-loc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+    }
+    .project-year {
+      position: absolute; top: 20px; right: 20px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .project-border {
+      position: absolute; inset: 0;
+      border: 1px solid transparent;
+      transition: border-color 0.3s;
+      pointer-events: none;
+    }
+    .project-card:hover .project-border { border-color: var(--glass-border); }
+
+    /* ── Services ── */
+    #services {
+      background: var(--dark-2);
+    }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin-top: 60px;
+      background: var(--stone);
+    }
+    .service-card {
+      background: var(--dark-2);
+      padding: 48px 36px;
+      transition: background 0.3s;
+      cursor: default;
+    }
+    .service-card:hover { background: var(--dark-3); }
+    .service-icon {
+      width: 48px; height: 48px;
+      margin-bottom: 28px;
+      color: var(--gold);
+    }
+    .service-num {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      color: var(--stone-light);
+      letter-spacing: 0.2em;
+      margin-bottom: 16px;
+    }
+    .service-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      margin-bottom: 16px;
+    }
+    .service-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+    }
+    .service-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-top: 28px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: gap 0.2s;
+    }
+    .service-link:hover { gap: 14px; }
+
+    /* ── Philosophy / Quote ── */
+    #philosophy {
+      background: var(--dark);
+      text-align: center;
+      padding: 140px 80px;
+      position: relative;
+    }
+    #philosophy::before {
+      content: '"';
+      position: absolute;
+      top: 40px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cinzel', serif;
+      font-size: 12rem;
+      color: rgba(202,138,4,0.05);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+    .philosophy-quote {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.5rem, 3.5vw, 2.8rem);
+      font-weight: 400;
+      line-height: 1.4;
+      max-width: 860px;
+      margin: 0 auto 40px;
+      color: var(--text);
+      letter-spacing: 0.03em;
+    }
+    .philosophy-author {
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    /* 3D rotating cube scene behind quote */
+    #canvas-philosophy {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+    #philosophy .philosophy-content {
+      position: relative; z-index: 1;
+    }
+
+    /* ── Process ── */
+    #process { background: var(--dark-2); }
+    .process-steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0;
+      margin-top: 60px;
+      position: relative;
+    }
+    .process-steps::before {
+      content: '';
+      position: absolute;
+      top: 28px; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--stone), var(--gold), var(--stone), transparent);
+    }
+    .process-step {
+      padding: 0 24px;
+      text-align: center;
+      cursor: default;
+    }
+    .step-dot {
+      width: 56px; height: 56px;
+      border: 1px solid var(--glass-border);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 24px;
+      background: var(--dark-2);
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      color: var(--gold);
+      font-weight: 700;
+      position: relative; z-index: 1;
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .process-step:hover .step-dot {
+      background: rgba(202,138,4,0.1);
+      border-color: var(--gold);
+    }
+    .step-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+    .step-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ── Awards ── */
+    #awards {
+      background: var(--dark);
+      padding: 80px;
+      border-top: 1px solid var(--glass-border);
+    }
+    .awards-row {
+      display: flex; align-items: center; gap: 60px;
+      overflow: hidden;
+    }
+    .award-item {
+      flex-shrink: 0;
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: var(--stone-light);
+      text-transform: uppercase;
+      display: flex; align-items: center; gap: 16px;
+      transition: color 0.2s;
+      cursor: default;
+    }
+    .award-item:hover { color: var(--gold); }
+    .award-dot {
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Contact ── */
+    #contact {
+      background: var(--dark-2);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+    .contact-form {
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-group { display: flex; flex-direction: column; gap: 8px; }
+    .form-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .form-input, .form-select, .form-textarea {
+      background: var(--dark);
+      border: 1px solid var(--stone);
+      color: var(--text);
+      font-family: 'Josefin Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--gold);
+    }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--stone-light); }
+    .form-textarea { resize: vertical; min-height: 120px; }
+    .form-select option { background: var(--dark-2); }
+    .contact-info { }
+    .contact-item {
+      display: flex; gap: 20px; align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .contact-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+    .contact-icon {
+      width: 40px; height: 40px;
+      color: var(--gold);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .contact-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 6px;
+    }
+    .contact-val {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--dark);
+      border-top: 1px solid var(--glass-border);
+      padding: 48px 80px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .footer-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--text-muted);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-copy {
+      font-size: 0.72rem;
+      color: var(--stone-light);
+      letter-spacing: 0.1em;
+    }
+    .footer-links {
+      display: flex; gap: 32px;
+    }
+    .footer-links a {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--stone-light);
+      text-decoration: none;
+      transition: color 0.2s;
+      cursor: pointer;
+    }
+    .footer-links a:hover { color: var(--gold); }
+
+    /* ── Reveal Animations ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .hero-scroll::after { animation: none; }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      #hero { padding: 0 24px 60px; }
+      .hero-scroll { display: none; }
+      .stats-bar { padding: 40px 24px; flex-direction: column; gap: 32px; }
+      .stat-item { padding: 0; border-right: none; border-bottom: 1px solid var(--stone); padding-bottom: 32px; }
+      .stat-item:last-child { border-bottom: none; padding-bottom: 0; }
+      section { padding: 80px 24px; }
+      #about { grid-template-columns: 1fr; gap: 40px; }
+      .about-3d-wrap { height: 320px; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .project-card:first-child { aspect-ratio: 3/4; grid-row: span 1; }
+      .project-overlay { opacity: 1; transform: none; }
+      .services-grid { grid-template-columns: 1fr 1fr; }
+      #philosophy { padding: 80px 24px; }
+      .process-steps { grid-template-columns: 1fr; }
+      .process-steps::before { display: none; }
+      #contact { grid-template-columns: 1fr; gap: 60px; }
+      .form-row { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 24px; text-align: center; }
+      #awards { padding: 60px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom Cursor -->
+<div id="cursor">
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+</div>
+
+<!-- Hero Canvas (Three.js) -->
+<canvas id="canvas-hero" aria-hidden="true"></canvas>
+
+<div class="site-wrapper">
+
+  <!-- Navbar -->
+  <nav id="navbar" role="navigation" aria-label="Main navigation">
+    <a class="nav-logo" href="#hero">ARCH<span>VISION</span></a>
+    <ul class="nav-links">
+      <li><a href="#about">Studio</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#process">Process</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+      Start a Project
+    </button>
+  </nav>
+
+  <!-- Hero -->
+  <section id="hero" aria-label="Hero">
+    <div class="hero-tag">Award-Winning Architecture</div>
+    <h1 class="hero-h1">
+      Spaces That<br/>
+      <em>Redefine</em><br/>
+      Human Form
+    </h1>
+    <p class="hero-sub">
+      We craft architecture that transcends the ordinary — blending structural precision
+      with artistic vision to build the extraordinary.
+    </p>
+    <div class="hero-actions">
+      <a class="btn-primary" href="#projects">Explore Work</a>
+      <a class="btn-ghost" href="#about">Our Story</a>
+    </div>
+    <div class="hero-scroll" aria-hidden="true">Scroll</div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats-bar" role="region" aria-label="Studio statistics">
+    <div class="stat-item">
+      <div class="stat-num" id="stat1">0</div>
+      <div class="stat-label">Projects Completed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat2">0</div>
+      <div class="stat-label">Years of Excellence</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat3">0</div>
+      <div class="stat-label">Awards Received</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" id="stat4">0</div>
+      <div class="stat-label">Countries Built In</div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <section id="about" aria-label="About the studio">
+    <div class="about-3d-wrap">
+      <canvas id="canvas-about" aria-label="Rotating 3D architectural model"></canvas>
+      <div class="about-frame" aria-hidden="true"></div>
+    </div>
+    <div class="about-content reveal">
+      <div class="section-tag">The Studio</div>
+      <h2 class="section-h2">Architecture<br/>as Living Art</h2>
+      <p class="section-lead">
+        Founded on the belief that every structure is an opportunity to elevate human experience,
+        ArchVision Studio has defined skylines across four continents since 2001.
+      </p>
+      <div class="about-list">
+        <div class="about-item">
+          <div class="about-item-num">01</div>
+          <div>
+            <div class="about-item-title">Visionary Design</div>
+            <div class="about-item-text">We challenge convention to create structures that inspire, provoke thought, and stand the test of time.</div>
+          </div>
+        </div>
+        <div class="about-item">
+          <div class="about-item-num">02</div>
+          <div>
+            <div class="about-item-title">Sustainable Future</div>
+            <div class="about-item-text">Every project integrates living systems, renewable energy, and biophilic principles by default.</div>
+          </div>
+        </div>
+        <div class="about-item">
+          <div class="about-item-num">03</div>
+          <div>
+            <div class="about-item-title">Precision Engineering</div>
+            <div class="about-item-text">Our structural team works in perfect symbiosis with designers, ensuring beauty is never compromised by reality.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projects -->
+  <section id="projects" aria-label="Portfolio of projects">
+    <div class="projects-header">
+      <div>
+        <div class="section-tag">Selected Work</div>
+        <h2 class="section-h2 reveal">Defining<br/>the Skyline</h2>
+      </div>
+      <a class="btn-ghost" href="#" style="cursor:pointer">View All Projects</a>
+    </div>
+    <div class="projects-grid">
+      <div class="project-card" tabindex="0" role="article" aria-label="Zenith Tower project">
+        <canvas class="project-canvas" data-project="zenith" aria-hidden="true"></canvas>
+        <div class="project-year" aria-hidden="true">2024</div>
+        <div class="project-overlay">
+          <div class="project-cat">Commercial Tower</div>
+          <div class="project-name">Zenith Tower</div>
+          <div class="project-loc">Dubai, UAE — 380m</div>
+        </div>
+        <div class="project-border" aria-hidden="true"></div>
+      </div>
+      <div class="project-card" tabindex="0" role="article" aria-label="Canopy House project">
+        <canvas class="project-canvas" data-project="canopy" aria-hidden="true"></canvas>
+        <div class="project-year" aria-hidden="true">2023</div>
+        <div class="project-overlay">
+          <div class="project-cat">Residential</div>
+          <div class="project-name">Canopy House</div>
+          <div class="project-loc">Kyoto, Japan</div>
+        </div>
+        <div class="project-border" aria-hidden="true"></div>
+      </div>
+      <div class="project-card" tabindex="0" role="article" aria-label="Meridian Museum project">
+        <canvas class="project-canvas" data-project="meridian" aria-hidden="true"></canvas>
+        <div class="project-year" aria-hidden="true">2023</div>
+        <div class="project-overlay">
+          <div class="project-cat">Cultural</div>
+          <div class="project-name">Meridian Museum</div>
+          <div class="project-loc">Oslo, Norway</div>
+        </div>
+        <div class="project-border" aria-hidden="true"></div>
+      </div>
+      <div class="project-card" tabindex="0" role="article" aria-label="Lumen Bridge project">
+        <canvas class="project-canvas" data-project="lumen" aria-hidden="true"></canvas>
+        <div class="project-year" aria-hidden="true">2022</div>
+        <div class="project-overlay">
+          <div class="project-cat">Infrastructure</div>
+          <div class="project-name">Lumen Bridge</div>
+          <div class="project-loc">Barcelona, Spain</div>
+        </div>
+        <div class="project-border" aria-hidden="true"></div>
+      </div>
+      <div class="project-card" tabindex="0" role="article" aria-label="Solaris Pavilion project">
+        <canvas class="project-canvas" data-project="solaris" aria-hidden="true"></canvas>
+        <div class="project-year" aria-hidden="true">2022</div>
+        <div class="project-overlay">
+          <div class="project-cat">Public Space</div>
+          <div class="project-name">Solaris Pavilion</div>
+          <div class="project-loc">Sydney, Australia</div>
+        </div>
+        <div class="project-border" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section id="services" aria-label="Services offered">
+    <div class="section-tag">What We Do</div>
+    <h2 class="section-h2 reveal">Full Spectrum<br/>Design Expertise</h2>
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="1"/><path d="M9 3v18M3 9h6M3 15h6"/>
+        </svg>
+        <div class="service-num">01</div>
+        <div class="service-title">Architectural Design</div>
+        <p class="service-text">From concept sketch to detailed construction documents, our design process is rigorous, iterative, and always human-centered.</p>
+        <a class="service-link" href="#" aria-label="Learn more about Architectural Design">
+          Learn More
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="service-card reveal">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/>
+        </svg>
+        <div class="service-num">02</div>
+        <div class="service-title">Urban Planning</div>
+        <p class="service-text">We shape entire districts and master plans that balance density, green space, mobility, and social equity at city scale.</p>
+        <a class="service-link" href="#" aria-label="Learn more about Urban Planning">
+          Learn More
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="service-card reveal">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/><polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+        <div class="service-num">03</div>
+        <div class="service-title">Interior Architecture</div>
+        <p class="service-text">Interior and exterior are one continuous narrative. Our interiors extend the building's soul into every inhabited space.</p>
+        <a class="service-link" href="#" aria-label="Learn more about Interior Architecture">
+          Learn More
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+      <div class="service-card reveal">
+        <svg class="service-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <div class="service-num">04</div>
+        <div class="service-title">Sustainability Consulting</div>
+        <p class="service-text">LEED Platinum strategies, passive house design, and net-zero carbon roadmaps embedded in every project from day one.</p>
+        <a class="service-link" href="#" aria-label="Learn more about Sustainability Consulting">
+          Learn More
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Philosophy Quote -->
+  <section id="philosophy" aria-label="Design philosophy">
+    <canvas id="canvas-philosophy" aria-hidden="true"></canvas>
+    <div class="philosophy-content">
+      <div class="section-tag" style="justify-content:center">Philosophy</div>
+      <blockquote class="philosophy-quote">
+        "Architecture should speak of its time and place, but yearn for timelessness."
+      </blockquote>
+      <div class="philosophy-author">— Frank Gehry, Influence & Inspiration</div>
+    </div>
+  </section>
+
+  <!-- Process -->
+  <section id="process" aria-label="Our design process">
+    <div class="section-tag">How We Work</div>
+    <h2 class="section-h2 reveal">Five Phases,<br/>One Vision</h2>
+    <div class="process-steps">
+      <div class="process-step reveal">
+        <div class="step-dot" aria-hidden="true">01</div>
+        <div class="step-title">Discovery</div>
+        <p class="step-text">Deep listening. Understanding client vision, site conditions, cultural context, and regulatory landscape.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="step-dot" aria-hidden="true">02</div>
+        <div class="step-title">Concept</div>
+        <p class="step-text">Translating vision into form. Sketches, massing models, and spatial narratives that explore possibilities.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="step-dot" aria-hidden="true">03</div>
+        <div class="step-title">Design Dev</div>
+        <p class="step-text">Refining every detail. Materials, structure, MEP, and sustainability systems integrated seamlessly.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="step-dot" aria-hidden="true">04</div>
+        <div class="step-title">Documentation</div>
+        <p class="step-text">Precision construction documents and specifications that enable flawless execution on site.</p>
+      </div>
+      <div class="process-step reveal">
+        <div class="step-dot" aria-hidden="true">05</div>
+        <div class="step-title">Realization</div>
+        <p class="step-text">On-site oversight and quality control ensuring the built work matches the design vision exactly.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Awards Marquee -->
+  <div id="awards" aria-label="Awards and recognitions">
+    <div class="awards-row" role="list">
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>Pritzker Prize Shortlist 2023</div>
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>AIA Gold Medal 2022</div>
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>RIBA International Award 2023</div>
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>Dezeen Architect of the Year 2023</div>
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>World Architecture Festival — Best Commercial 2022</div>
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>Green Building Council Excellence Award</div>
+      <div class="award-item" role="listitem"><div class="award-dot" aria-hidden="true"></div>Architectural Review Future Projects 2024</div>
+    </div>
+  </div>
+
+  <!-- Contact -->
+  <section id="contact" aria-label="Contact us">
+    <div>
+      <div class="section-tag">Get in Touch</div>
+      <h2 class="section-h2 reveal">Begin Your<br/>Project Today</h2>
+      <p class="section-lead" style="margin-bottom:48px">
+        Whether you have a fully developed brief or a single inspiring image,
+        we welcome conversations at any stage.
+      </p>
+      <div class="contact-item">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        <div>
+          <div class="contact-label">Studio Address</div>
+          <div class="contact-val">40 Exchange Place, 18th Floor<br/>New York, NY 10005</div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+        </svg>
+        <div>
+          <div class="contact-label">Email</div>
+          <div class="contact-val">studio@archvision.com</div>
+        </div>
+      </div>
+      <div class="contact-item">
+        <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .18h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/>
+        </svg>
+        <div>
+          <div class="contact-label">Phone</div>
+          <div class="contact-val">+1 (212) 555 0180</div>
+        </div>
+      </div>
+    </div>
+    <form class="contact-form" onsubmit="handleSubmit(event)" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="fname">First Name</label>
+          <input class="form-input" type="text" id="fname" name="fname" placeholder="Jean" required autocomplete="given-name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="lname">Last Name</label>
+          <input class="form-input" type="text" id="lname" name="lname" placeholder="Nouvel" required autocomplete="family-name" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-input" type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="ptype">Project Type</label>
+        <select class="form-select" id="ptype" name="ptype">
+          <option value="">Select project type</option>
+          <option>Residential</option>
+          <option>Commercial</option>
+          <option>Cultural / Civic</option>
+          <option>Urban Master Plan</option>
+          <option>Interior Architecture</option>
+          <option>Sustainability Consulting</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="message">Tell Us About Your Vision</label>
+        <textarea class="form-textarea" id="message" name="message" placeholder="Describe your project, timeline, and aspirations…"></textarea>
+      </div>
+      <button type="submit" class="btn-primary" style="align-self:flex-start">Send Inquiry</button>
+    </form>
+  </section>
+
+  <!-- Footer -->
+  <footer role="contentinfo">
+    <div class="footer-logo">ARCH<span>VISION</span> STUDIO</div>
+    <div class="footer-copy">© 2025 ArchVision Studio. All rights reserved.</div>
+    <div class="footer-links">
+      <a href="#" aria-label="Privacy Policy">Privacy</a>
+      <a href="#" aria-label="Terms of Service">Terms</a>
+      <a href="#" aria-label="Instagram">Instagram</a>
+      <a href="#" aria-label="LinkedIn">LinkedIn</a>
+    </div>
+  </footer>
+
+</div><!-- end .site-wrapper -->
+
+<script>
+/* ─── Utilities ─── */
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ─── Custom Cursor ─── */
+const cursorDot = document.getElementById('cursor-dot');
+const cursorRing = document.getElementById('cursor-ring');
+let mx = 0, my = 0, rx = 0, ry = 0;
+document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+function animCursor() {
+  rx += (mx - rx) * 0.12;
+  ry += (my - ry) * 0.12;
+  cursorDot.style.left = mx + 'px';
+  cursorDot.style.top = my + 'px';
+  cursorRing.style.left = rx + 'px';
+  cursorRing.style.top = ry + 'px';
+  requestAnimationFrame(animCursor);
+}
+animCursor();
+document.querySelectorAll('a,button,[tabindex],.project-card,.service-card,.about-item,.award-item').forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+});
+
+/* ─── Navbar scroll ─── */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  navbar.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+/* ─── Counter animation ─── */
+function animateCount(el, target, suffix = '', duration = 2000) {
+  if (prefersReducedMotion) { el.textContent = target + suffix; return; }
+  const start = performance.now();
+  function step(now) {
+    const p = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(eased * target) + suffix;
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+const statsObserver = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting) {
+    animateCount(document.getElementById('stat1'), 247, '+');
+    animateCount(document.getElementById('stat2'), 23, '');
+    animateCount(document.getElementById('stat3'), 68, '');
+    animateCount(document.getElementById('stat4'), 32, '');
+    statsObserver.disconnect();
+  }
+}, { threshold: 0.5 });
+statsObserver.observe(document.querySelector('.stats-bar'));
+
+/* ─── Scroll reveal ─── */
+const revealObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+/* ─── Form submit ─── */
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type=submit]');
+  btn.textContent = 'Sent — Thank You';
+  btn.disabled = true;
+  btn.style.background = '#16a34a';
+  btn.style.color = '#fff';
+}
+
+/* ═══════════════════════════════════════════
+   THREE.JS SCENES
+═══════════════════════════════════════════ */
+
+/* ── 1. HERO — Animated city wireframe ── */
+(function initHero() {
+  const canvas = document.getElementById('canvas-hero');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
+  camera.position.set(0, 8, 28);
+  camera.lookAt(0, 2, 0);
+
+  // Fog
+  scene.fog = new THREE.FogExp2(0x0c0a09, 0.018);
+
+  // Grid floor
+  const gridHelper = new THREE.GridHelper(200, 60, 0x2a2420, 0x1a1614);
+  gridHelper.position.y = -1;
+  scene.add(gridHelper);
+
+  // Gold accent light
+  const pointLight = new THREE.PointLight(0xca8a04, 3, 60);
+  pointLight.position.set(0, 20, 0);
+  scene.add(pointLight);
+  const ambLight = new THREE.AmbientLight(0x1a1614, 2);
+  scene.add(ambLight);
+  const dirLight = new THREE.DirectionalLight(0xffd080, 1.5);
+  dirLight.position.set(10, 30, 10);
+  scene.add(dirLight);
+
+  // Building generator
+  function makeBuilding(x, z, w, d, h, isGold) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mat = new THREE.MeshStandardMaterial({
+      color: isGold ? 0x78580a : 0x1c1917,
+      wireframe: false,
+      metalness: 0.6,
+      roughness: 0.4,
+      transparent: true,
+      opacity: isGold ? 0.95 : 0.85,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, h / 2 - 1, z);
+
+    // Wireframe edges
+    const edges = new THREE.EdgesGeometry(geo);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: isGold ? 0xca8a04 : 0x44403c,
+      transparent: true,
+      opacity: isGold ? 0.8 : 0.3,
+    });
+    const wireframe = new THREE.LineSegments(edges, lineMat);
+    mesh.add(wireframe);
+    return mesh;
+  }
+
+  const buildings = [];
+  const configs = [
+    // [x,  z,   w,  d,   h,   gold]
+    [0,    0,   2.4, 2,  18,  true ],
+    [4,    1,   2,   2,  12,  false],
+    [-4,   1,   2,   2,  14,  false],
+    [8,    2,   2.2, 2,  9,   false],
+    [-8,   2,   2.2, 2,  11,  false],
+    [12,   0,   2.5, 2,  16,  true ],
+    [-12,  0,   2.5, 2,  13,  false],
+    [2.5,  4,   1.8, 1.8, 8,  false],
+    [-2.5, 4,   1.8, 1.8, 10, false],
+    [6,    5,   1.6, 1.6, 7,  false],
+    [-6,   5,   1.6, 1.6, 6,  false],
+    [16,   3,   2,   2,  8,   false],
+    [-16,  3,   2,   2,  9,   false],
+    [4,   -4,   2,   2,  6,   false],
+    [-4,  -4,   2,   2,  7,   false],
+  ];
+  configs.forEach(([x, z, w, d, h, g]) => {
+    const b = makeBuilding(x, z, w, d, h, g);
+    scene.add(b);
+    buildings.push({ mesh: b, speed: 0.002 + Math.random() * 0.001, offset: Math.random() * Math.PI * 2 });
+  });
+
+  // Floating particles
+  const particlesGeo = new THREE.BufferGeometry();
+  const pCount = 300;
+  const pPos = new Float32Array(pCount * 3);
+  for (let i = 0; i < pCount; i++) {
+    pPos[i * 3]     = (Math.random() - 0.5) * 80;
+    pPos[i * 3 + 1] = Math.random() * 40;
+    pPos[i * 3 + 2] = (Math.random() - 0.5) * 60;
+  }
+  particlesGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  const particlesMat = new THREE.PointsMaterial({ color: 0xca8a04, size: 0.08, transparent: true, opacity: 0.5 });
+  scene.add(new THREE.Points(particlesGeo, particlesMat));
+
+  let mouseX = 0, mouseY = 0;
+  document.addEventListener('mousemove', e => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  let t = 0;
+  function loop() {
+    requestAnimationFrame(loop);
+    t += 0.005;
+    // Subtle camera drift following mouse
+    camera.position.x += (mouseX * 3 - camera.position.x) * 0.03;
+    camera.position.y += (-mouseY * 1.5 + 8 - camera.position.y) * 0.03;
+    camera.lookAt(0, 2, 0);
+    // Pulsing gold light
+    pointLight.intensity = 2.5 + Math.sin(t * 1.5) * 0.5;
+    pointLight.position.x = Math.sin(t * 0.3) * 5;
+    // Subtle building glow pulse
+    buildings.forEach(({ mesh, speed, offset }) => {
+      mesh.rotation.y = Math.sin(t * speed + offset) * 0.002;
+    });
+    renderer.render(scene, camera);
+  }
+  if (!prefersReducedMotion) loop();
+  else renderer.render(scene, camera);
+})();
+
+/* ── 2. ABOUT — Rotating abstract building ── */
+(function initAbout() {
+  const canvas = document.getElementById('canvas-about');
+  const w = canvas.parentElement.offsetWidth;
+  const h = canvas.parentElement.offsetHeight || 500;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(w, h);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 500);
+  camera.position.set(0, 4, 16);
+  camera.lookAt(0, 0, 0);
+
+  const ambLight = new THREE.AmbientLight(0x333333, 2);
+  scene.add(ambLight);
+  const goldLight = new THREE.PointLight(0xca8a04, 4, 40);
+  goldLight.position.set(5, 10, 5);
+  scene.add(goldLight);
+  const blueLight = new THREE.PointLight(0x2040a0, 2, 30);
+  blueLight.position.set(-6, 2, -4);
+  scene.add(blueLight);
+
+  // Main tower
+  const group = new THREE.Group();
+  scene.add(group);
+
+  function addBox(x, y, z, w, h, d, col, wire = false) {
+    const geo = new THREE.BoxGeometry(w, h, d);
+    const mat = new THREE.MeshStandardMaterial({
+      color: col, metalness: 0.7, roughness: 0.3,
+      transparent: true, opacity: wire ? 0 : 0.9,
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(x, y, z);
+    if (wire) {
+      const edges = new THREE.EdgesGeometry(geo);
+      const lm = new THREE.LineBasicMaterial({ color: col });
+      mesh.add(new THREE.LineSegments(edges, lm));
+    }
+    group.add(mesh);
+    return mesh;
+  }
+
+  // Tower body
+  addBox(0, 0, 0, 2.5, 10, 2.5, 0x1c1917);
+  addBox(0, 0, 0, 2.5, 10, 2.5, 0xca8a04, true);
+  // Tower setbacks
+  addBox(0, 4, 0, 2, 3, 2, 0x28231f);
+  addBox(0, 5.5, 0, 1.4, 2, 1.4, 0x44403c);
+  addBox(0, 7, 0, 0.8, 3, 0.8, 0x78580a);
+  // Spire
+  const spireGeo = new THREE.CylinderGeometry(0.05, 0.3, 3, 8);
+  const spireMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, metalness: 0.9, roughness: 0.1 });
+  const spire = new THREE.Mesh(spireGeo, spireMat);
+  spire.position.set(0, 10, 0);
+  group.add(spire);
+
+  // Orbiting rings
+  function addRing(radius, y, col) {
+    const geo = new THREE.TorusGeometry(radius, 0.03, 8, 60);
+    const mat = new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.4 });
+    const ring = new THREE.Mesh(geo, mat);
+    ring.position.y = y;
+    ring.rotation.x = Math.PI / 2;
+    group.add(ring);
+    return ring;
+  }
+  const r1 = addRing(3.5, -1, 0xca8a04);
+  const r2 = addRing(5, -2, 0x44403c);
+
+  // Floating cubes
+  const floaters = [];
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const geo = new THREE.BoxGeometry(0.25, 0.25, 0.25);
+    const mat = new THREE.MeshStandardMaterial({ color: 0xca8a04, metalness: 0.8, roughness: 0.2 });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(Math.cos(a) * 4, Math.sin(i) * 3, Math.sin(a) * 4);
+    scene.add(m);
+    floaters.push({ mesh: m, angle: a, radius: 4, yBase: Math.sin(i) * 3 });
+  }
+
+  let t = 0;
+  function loop() {
+    requestAnimationFrame(loop);
+    t += 0.008;
+    group.rotation.y += 0.005;
+    r1.rotation.z += 0.01;
+    r2.rotation.z -= 0.007;
+    goldLight.position.x = Math.sin(t) * 8;
+    goldLight.position.z = Math.cos(t) * 8;
+    floaters.forEach((f, i) => {
+      f.angle += 0.008;
+      f.mesh.position.x = Math.cos(f.angle) * f.radius;
+      f.mesh.position.z = Math.sin(f.angle) * f.radius;
+      f.mesh.position.y = f.yBase + Math.sin(t + i) * 0.5;
+      f.mesh.rotation.x += 0.02;
+      f.mesh.rotation.y += 0.015;
+    });
+    renderer.render(scene, camera);
+  }
+  if (!prefersReducedMotion) loop();
+  else renderer.render(scene, camera);
+
+  const ro = new ResizeObserver(() => {
+    const nw = canvas.parentElement.offsetWidth;
+    const nh = canvas.parentElement.offsetHeight || 500;
+    renderer.setSize(nw, nh);
+    camera.aspect = nw / nh;
+    camera.updateProjectionMatrix();
+  });
+  ro.observe(canvas.parentElement);
+})();
+
+/* ── 3. PROJECT CARDS ── */
+const projectColors = {
+  zenith:   { main: 0x1a2040, accent: 0xca8a04, alt: 0x2a3060 },
+  canopy:   { main: 0x1a2e1a, accent: 0x4a8a04, alt: 0x243020 },
+  meridian: { main: 0x201a30, accent: 0x8a4aCA, alt: 0x302040 },
+  lumen:    { main: 0x30201a, accent: 0xCA6a04, alt: 0x402820 },
+  solaris:  { main: 0x202830, accent: 0x04a8CA, alt: 0x283440 },
+};
+
+document.querySelectorAll('.project-canvas').forEach(canvas => {
+  const key = canvas.dataset.project;
+  const colors = projectColors[key] || projectColors.zenith;
+  const parent = canvas.parentElement;
+  const w = parent.offsetWidth || 320;
+  const h = parent.offsetHeight || 400;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.setSize(w, h);
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(colors.main, 10, 40);
+  const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 200);
+  camera.position.set(0, 3, 10);
+
+  scene.add(new THREE.AmbientLight(0x111111, 3));
+  const pl = new THREE.PointLight(colors.accent, 4, 30);
+  pl.position.set(3, 8, 3);
+  scene.add(pl);
+  const pl2 = new THREE.PointLight(colors.alt, 2, 20);
+  pl2.position.set(-3, 2, -2);
+  scene.add(pl2);
+
+  const grid = new THREE.GridHelper(40, 20, colors.main, colors.main);
+  grid.position.y = -0.5;
+  scene.add(grid);
+
+  // Unique building per project
+  const g = new THREE.Group();
+  scene.add(g);
+
+  const bGeo = new THREE.BoxGeometry(1.5, 6 + Math.random() * 4, 1.5);
+  const bMat = new THREE.MeshStandardMaterial({ color: colors.main, metalness: 0.7, roughness: 0.3 });
+  const b = new THREE.Mesh(bGeo, bMat);
+  b.position.y = 3;
+  g.add(b);
+  g.add(new THREE.LineSegments(new THREE.EdgesGeometry(bGeo), new THREE.LineBasicMaterial({ color: colors.accent, transparent: true, opacity: 0.7 })));
+
+  for (let i = 0; i < 3; i++) {
+    const h2 = 2 + Math.random() * 3;
+    const sb = new THREE.Mesh(
+      new THREE.BoxGeometry(0.8, h2, 0.8),
+      new THREE.MeshStandardMaterial({ color: colors.alt, metalness: 0.5, roughness: 0.5 })
+    );
+    sb.position.set((i - 1) * 2.5, h2 / 2 - 0.5, (Math.random() - 0.5) * 2);
+    g.add(sb);
+  }
+
+  let t = Math.random() * 100;
+  let hover = false;
+  canvas.parentElement.addEventListener('mouseenter', () => { hover = true; });
+  canvas.parentElement.addEventListener('mouseleave', () => { hover = false; });
+
+  function loop() {
+    requestAnimationFrame(loop);
+    t += hover ? 0.015 : 0.006;
+    g.rotation.y += hover ? 0.012 : 0.004;
+    pl.position.x = Math.sin(t * 0.8) * 5;
+    pl.intensity = 3 + Math.sin(t) * 1;
+    camera.position.y = 3 + Math.sin(t * 0.3) * 0.5;
+    camera.lookAt(0, 2, 0);
+    renderer.render(scene, camera);
+  }
+  if (!prefersReducedMotion) loop();
+  else renderer.render(scene, camera);
+
+  const ro = new ResizeObserver(() => {
+    const nw = parent.offsetWidth || 320;
+    const nh = parent.offsetHeight || 400;
+    renderer.setSize(nw, nh);
+    camera.aspect = nw / nh;
+    camera.updateProjectionMatrix();
+  });
+  ro.observe(parent);
+});
+
+/* ── 4. PHILOSOPHY — Abstract rotating wireframe ── */
+(function initPhilosophy() {
+  const canvas = document.getElementById('canvas-philosophy');
+  const section = canvas.parentElement;
+  const w = section.offsetWidth;
+  const h = section.offsetHeight || 500;
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+  renderer.setSize(w, h);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 500);
+  camera.position.set(0, 0, 12);
+
+  const shapes = [];
+
+  function addWireShape(geo, col, scale = 1) {
+    const mat = new THREE.MeshBasicMaterial({ wireframe: true, color: col, transparent: true, opacity: 0.3 });
+    const m = new THREE.Mesh(geo, mat);
+    m.scale.setScalar(scale);
+    scene.add(m);
+    shapes.push(m);
+    return m;
+  }
+
+  addWireShape(new THREE.IcosahedronGeometry(3, 1), 0xca8a04, 1);
+  addWireShape(new THREE.OctahedronGeometry(5, 0), 0x78580a, 1);
+  addWireShape(new THREE.TorusGeometry(2, 0.6, 8, 40), 0x44403c, 1);
+
+  let t = 0;
+  function loop() {
+    requestAnimationFrame(loop);
+    t += 0.004;
+    shapes[0].rotation.x += 0.004; shapes[0].rotation.y += 0.006;
+    shapes[1].rotation.x -= 0.003; shapes[1].rotation.z += 0.004;
+    shapes[2].rotation.y += 0.008; shapes[2].rotation.x += 0.003;
+    renderer.render(scene, camera);
+  }
+  if (!prefersReducedMotion) loop();
+  else renderer.render(scene, camera);
+
+  const ro = new ResizeObserver(() => {
+    const nw = section.offsetWidth;
+    const nh = section.offsetHeight || 500;
+    renderer.setSize(nw, nh);
+    camera.aspect = nw / nh;
+    camera.updateProjectionMatrix();
+  });
+  ro.observe(section);
+})();
+</script>
+</body>
+</html>
