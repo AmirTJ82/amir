@@ -160,30 +160,28 @@ export default function Hero() {
             با تیم متخصص اجرامون، فضای زندگی خود را به اثری هنری تبدیل کنید. از طراحی تا اجرا، همه چیز با دقت و زیبایی.
           </p>
 
-          {/* CTA Button */}
+          {/* CTA Button - Neumorphism style */}
           <motion.button
             className="relative group flex items-center gap-3 px-8 py-4 rounded-2xl text-base font-semibold overflow-hidden cursor-pointer"
             style={{
-              background: "linear-gradient(135deg, #CA8A04, #92400E)",
+              background: "linear-gradient(145deg, #d4960a, #a06a02)",
               color: "#fff",
-              boxShadow: "0 0 30px rgba(202,138,4,0.4)",
+              boxShadow: "6px 6px 16px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,200,50,0.1), inset 0 1px 0 rgba(255,220,100,0.4)",
+              border: "1px solid rgba(202,138,4,0.3)",
             }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.03, boxShadow: "6px 6px 20px rgba(0,0,0,0.7), -2px -2px 10px rgba(255,200,50,0.15), inset 0 1px 0 rgba(255,220,100,0.4), 0 0 30px rgba(202,138,4,0.5)" }}
+            whileTap={{ scale: 0.97, boxShadow: "inset 4px 4px 10px rgba(0,0,0,0.5), inset -2px -2px 6px rgba(255,200,50,0.1)" }}
             animate={{
               boxShadow: [
-                "0 0 20px rgba(202,138,4,0.3)",
-                "0 0 40px rgba(202,138,4,0.6)",
-                "0 0 20px rgba(202,138,4,0.3)",
+                "6px 6px 16px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,200,50,0.1), inset 0 1px 0 rgba(255,220,100,0.4), 0 0 15px rgba(202,138,4,0.2)",
+                "6px 6px 16px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,200,50,0.1), inset 0 1px 0 rgba(255,220,100,0.4), 0 0 35px rgba(202,138,4,0.5)",
+                "6px 6px 16px rgba(0,0,0,0.6), -2px -2px 8px rgba(255,200,50,0.1), inset 0 1px 0 rgba(255,220,100,0.4), 0 0 15px rgba(202,138,4,0.2)",
               ],
             }}
-            transition={{ duration: 2, repeat: Infinity }}
+            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
           >
-            {/* Shimmer overlay */}
-            <span
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%)", backgroundSize: "200% 100%" }}
-            />
+            <span className="absolute inset-x-0 top-0 h-px" style={{ background: "linear-gradient(to right, transparent, rgba(255,220,100,0.6), transparent)" }} />
+            <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{ background: "linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%)" }} />
             مشاوره رایگان بگیرید
             <ChevronLeft size={18} />
           </motion.button>
